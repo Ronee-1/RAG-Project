@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM TERMINAL</title>
+    <!-- Import Font Pixel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THEME VARIABLES (Hitam, Putih, Hijau) --- */
+        :root {
+            --bg-color: #000000;
+            --screen-bg: #000000;
+            
+            /* Border tetap Putih sesuai permintaan "Hitam Putih" */
+            --border-color: #ffffff; 
+            
+            /* Font Hijau sesuai permintaan */
+            --text-color: #00ff33; 
+            --text-dim: #008f11;
+            
+            /* Warna Bubble (Wireframe Style) */
+            --bubble-user-border: #ffffff;
+            --bubble-ai-border: #00ff33;
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'VT323', monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            
+            /* Grid Background Halus */
+            background-image: 
+                linear-gradient(rgba(0, 255, 51, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 51, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* --- CRT EFFECT (Garis Layar TV) --- */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.6;
+        }
+
+        /* Efek Glow pada teks agar seperti neon */
+        body {
+            text-shadow: 0 0 2px var(--text-dim);
+        }
+
+        /* --- CONTAINER UTAMA --- */
+        #app-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--screen-bg);
+            /* Border Putih Tebal */
+            border: 4px solid var(--border-color);
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 51, 0.1);
+        }
+
+        /* --- HEADER --- */
+        header {
+            padding: 15px 20px;
+            border-bottom: 4px solid var(--border-color);
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: var(--border-color); /* Judul Putih */
+            letter-spacing: 2px;
+        }
+
+        .status-badge {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 2px 10px;
+            text-transform: uppercase;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 5px var(--text-dim); opacity: 1; }
+            50% { box-shadow: 0 0 15px var(--text-color); opacity: 0.8; }
+        }
+
+        /* --- CHAT AREA --- */
+        #chat-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-size: 1.5rem;
+        }
+
+        #chat-history::-webkit-scrollbar { width: 10px; background: #000; border-left: 1px solid #333; }
+        #chat-history::-webkit-scrollbar-thumb { background: var(--text-color); }
+
+        .message {
+            max-width: 90%;
+            padding: 10px 15px;
+            line-height: 1.3;
+            position: relative;
+            word-wrap: break-word;
+            border: 2px solid; /* Wireframe style */
+        }
+
+        /* User: Border Putih, Teks Putih */
+        .user-message {
+            align-self: flex-end;
+            border-color: var(--bubble-user-border);
+            color: #ffffff;
+            background-color: #000;
+        }
+        
+        .user-message::before {
+            content: '>_ USER';
+            position: absolute;
+            top: -12px;
+            right: 10px;
+            background: #000;
+            font-size: 0.8rem;
+            padding: 0 5px;
+            color: #fff;
+        }
+
+        /* AI: Border Hijau, Teks Hijau */
+        .ai-message {
+            align-self: flex-start;
+            border-color: var(--bubble-ai-border);
+            color: var(--text-color);
+            background-color: #000;
+            box-shadow: 4px 4px 0px rgba(0, 255, 51, 0.2);
+        }
+
+        .ai-message::before {
+            content: ':: SYSTEM ::';
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #000;
+            font-size: 0.8rem;
+            padding: 0 5px;
+            color: var(--text-color);
+        }
+
+        /* Typing Indicator */
+        .typing-container {
+            align-self: flex-start;
+            margin-left: 10px;
+            display: none;
+            color: var(--text-color);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            animation: blink-text 1s infinite;
+        }
+
+        @keyframes blink-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* --- INPUT AREA --- */
+        #input-area {
+            padding: 20px;
+            background-color: #000;
+            border-top: 4px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #user-input {
+            flex: 1;
+            background-color: #000;
+            border: 2px solid var(--text-dim);
+            color: var(--text-color);
+            padding: 15px;
+            font-family: 'VT323', monospace;
+            font-size: 1.6rem;
+        }
+        
+        #user-input::placeholder { color: #333; }
+        #user-input:focus { border-color: var(--text-color); box-shadow: 0 0 10px var(--text-dim); }
+
+        /* Tombol Kirim: Hitam Putih */
+        #send-btn {
+            background-color: #000;
+            border: 2px solid #fff;
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        #send-btn:hover {
+            background-color: #fff;
+            color: #000;
+        }
+        
+        #send-btn svg { width: 30px; height: 30px; fill: currentColor; }
+
+        /* Dekorasi Sudut */
+        .corner-deco {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 4px solid var(--text-color);
+            z-index: 10;
+        }
+        .tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Efek Garis Monitor -->
+    <div class="scanlines"></div>
+
+    <div id="app-container">
+        <!-- Dekorasi Sudut -->
+        <div class="corner-deco tl"></div>
+        <div class="corner-deco tr"></div>
+        <div class="corner-deco bl"></div>
+        <div class="corner-deco br"></div>
+
+        <header>
+            <h1>TERMINAL_V.2</h1>
+            <div class="status-badge">ONLINE</div>
+        </header>
+
+        <div id="chat-history">
+            <div class="message ai-message">
+                SYSTEM INITIALIZED.<br>COMMAND LINE READY.<br>WAITING FOR INPUT...
+            </div>
+        </div>
+        
+        <div id="typing" class="typing-container">
+            PROCESSING_DATA...
+        </div>
+
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="ENTER COMMAND..." autocomplete="off">
+            <button id="send-btn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIC AREA ---
+        let sessionId = localStorage.getItem('bw_session_id');
+        if (!sessionId) {
+            sessionId = 'user-' + Math.random().toString(36).substring(7);
+            localStorage.setItem('bw_session_id', sessionId);
+        }
+
+        const inputField = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const typingIndicator = document.getElementById('typing');
+
+        inputField.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+
+        async function sendMessage() {
+            const text = inputField.value.trim();
+            if (!text) return;
+
+            // Tampilkan Pesan User (Putih)
+            appendMessage(text, 'user-message');
+            inputField.value = '';
+            
+            // UI State
+            setInputState(false);
+            showTyping(true);
+
+            try {
+                // Kirim ke Server
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: text, sessionId: sessionId })
+                });
+
+                const data = await response.json();
+                showTyping(false);
+
+                // Tampilkan Balasan AI (Hijau - Typewriter)
+                if (data.answer) {
+                    typeWriterMessage(data.answer, 'ai-message');
+                } else {
+                    appendMessage("SYS_ERR: " + (data.error || "UNKNOWN"), 'ai-message');
+                }
+
+            } catch (err) {
+                showTyping(false);
+                appendMessage("CONNECTION_FAILED.", 'ai-message');
+            }
+
+            setInputState(true);
+            inputField.focus();
+        }
+
+        function setInputState(enabled) {
+            inputField.disabled = !enabled;
+            sendBtn.disabled = !enabled;
+            if (enabled) {
+                inputField.style.opacity = "1";
+                sendBtn.style.opacity = "1";
+            } else {
+                inputField.style.opacity = "0.5";
+                sendBtn.style.opacity = "0.5";
+            }
+        }
+
+        function showTyping(show) {
+            typingIndicator.style.display = show ? 'block' : 'none';
+            scrollToBottom();
+        }
+
+        function appendMessage(text, className) {
+            const div = document.createElement('div');
+            div.classList.add('message', className);
+            div.innerHTML = formatText(text);
+            chatHistory.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        // Efek mengetik
+        function typeWriterMessage(text, className) {
+            const div = document.createElement('div');
+            div.classList.add('message', className);
+            chatHistory.appendChild(div);
+            
+            let i = 0;
+            const speed = 20; 
+            const formattedText = formatText(text);
+
+            if (formattedText.includes('<') && !formattedText.includes('<br>')) {
+                div.innerHTML = formattedText;
+                scrollToBottom();
+                return;
+            }
+
+            div.innerHTML = ""; 
+            
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        div.innerHTML += '<br>';
+                    } else {
+                        div.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    scrollToBottom();
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        function formatText(text) {
+            let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return safeText.replace(/\n/g, '<br>');
+        }
+
+        function scrollToBottom() {
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+</html>
