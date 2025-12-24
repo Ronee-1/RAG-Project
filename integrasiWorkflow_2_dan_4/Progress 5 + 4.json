@@ -1,0 +1,428 @@
+{
+  "name": "Progress 5 + 4",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "43fe167d-547b-49ec-bcf7-6c7386d4b751",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -672,
+        208
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "nmG4p1Q4JDeaMGTB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Listen for incoming events').first().json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "864fe2a5-09f9-461f-b661-01028b6d82df",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -80,
+        128
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "0d0f77b1-076b-4954-888e-b5bc98b66f02",
+      "credentials": {
+        "telegramApi": {
+          "id": "WvzeQOD6zt579cWf",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}\n",
+        "text": "={{ $('AI Agent').item.json.output.replace(/&/g, \"&amp;\").replace(/>/g, \"&gt;\").replace(/</g, \"&lt;\").replace(/\"/g, \"&quot;\") }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "836b0844-59e1-4ff8-86bd-b61bd0298b2d",
+      "name": "Correct errors",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        160,
+        160
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "e33e0672-4a19-448a-817c-91bb2b859525",
+      "credentials": {
+        "telegramApi": {
+          "id": "WvzeQOD6zt579cWf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "agent": "openAiFunctionsAgent",
+        "text": "={{$json.body || $json.message.text || $json.message || '' }}",
+        "options": {
+          "systemMessage": "Kamu adalah asisten AI yang memiliki akses ke dua sumber data utama. Gunakan instruksi berikut untuk menentukan alat mana yang harus digunakan:\n\nPinecone Vector Store: Gunakan alat ini jika pengguna bertanya tentang data pribadi atau akademik yang spesifik, seperti IPK, NIM, nilai mata kuliah, atau identitas diri. Kamu WAJIB melakukan pencarian di sini untuk setiap pertanyaan terkait data sensitif tersebut.\n\nCall 'Workflow Progress 4': Gunakan alat ini jika pengguna bertanya tentang file, dokumen, atau materi secara umum yang tersimpan di Google Drive. Alat ini akan memproses file berdasarkan query user.\n\nAturan Tambahan:\n\nJika informasi ditemukan di salah satu sumber, berikan jawaban yang akurat berdasarkan data tersebut.\n\nJika informasi tidak ditemukan di Pinecone, cobalah mencari di Google Drive sebelum menyerah.\n\nJawablah selalu dalam bahasa Indonesia yang sopan.\n"
+        }
+      },
+      "id": "852065fc-da42-4e13-9a67-adad13532bac",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -592,
+        -16
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -896,
+        -112
+      ],
+      "id": "0e93d06e-1a83-4065-9ec3-acd205a928f8",
+      "name": "Telegram Trigger",
+      "webhookId": "f7b24e5c-6669-4601-bc0b-30f3d4ca7c00",
+      "credentials": {
+        "telegramApi": {
+          "id": "WvzeQOD6zt579cWf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bc3934df-8d10-48df-9960-f0db1e806328",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -864,
+        208
+      ],
+      "id": "7787da74-d90c-451a-b6df-c35def36a23f",
+      "name": "Webhook",
+      "webhookId": "bc3934df-8d10-48df-9960-f0db1e806328"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ { output: $json.output } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "8bb7dd95-e2da-4c69-a81d-8afc14efdbc0",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This tool retrieves relevant context from Pinecone knowledge base based on the user's query.\n\n",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "datasaya",
+          "mode": "list",
+          "cachedResultName": "datasaya"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        256
+      ],
+      "id": "a6634240-0e29-494a-8ee6-cb2d0422c7ef",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "flIp99F50rDPMNyp",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -416,
+        512
+      ],
+      "id": "15bea0ee-0f99-452d-a25d-e8fc0c67ffe7",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "nmG4p1Q4JDeaMGTB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=       ={{ $json.body.userId || $json.userId || 'default' }}",
+        "tableName": "chat_memori",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        384
+      ],
+      "id": "643dbbc0-fb98-4cd0-8aaf-22022db383e5",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "tMil04jZLYLqCprs",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0fab176b-0a8c-4f35-adb2-2c9e11c3cbd9",
+              "leftValue": "={{ $('Webhook').isExecuted }}",
+              "rightValue": "web-app",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        -32
+      ],
+      "id": "dca2be24-87e1-40ba-9211-d585e290f349",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "description": "Gunakan tool ini untuk mencari dan memproses file dari Google Drive berdasarkan query user. \nTool ini akan:\n   - Mencari file di folder Google Drive berdasarkan query\n   - Download file yang relevan\n   - Memproses file dan menyimpannya ke Pinecone Vector Store\n   \n   WAJIB gunakan tool ini ketika user meminta:\n   - File tertentu dari Google Drive\n   - Informasi dari dokumen\n   - Upload atau proses file\n   - Atau query yang memerlukan akses ke file di Google Drive\n   \n   Input: query (string) - kata kunci untuk mencari file",
+        "workflowId": {
+          "__rl": true,
+          "value": "g4FGyWopS5d5xdz9",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 2",
+          "cachedResultUrl": "/workflow/g4FGyWopS5d5xdz9"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        352
+      ],
+      "id": "fd52011e-5025-4883-bdf6-86ca335e4a8e",
+      "name": "Call 'Workflow Progress 4'"
+    },
+    {
+      "parameters": {
+        "options": {
+          "gl": "id",
+          "hl": "id"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        80,
+        512
+      ],
+      "id": "e169af89-efe7-4283-8395-1502a69eab32",
+      "name": "SerpAPI"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Correct errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Workflow Progress 4'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "235e6364-a48a-46e7-b9be-2edcbd460a5f",
+  "meta": {
+    "instanceId": "5fff63f10269421181b000d34f95c6456acfa4c0ee1b19ad7d82c0347d78d7f3"
+  },
+  "id": "OHUWnvvXWXKhPzRd",
+  "tags": []
+}
