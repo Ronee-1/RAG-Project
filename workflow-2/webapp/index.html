@@ -3,420 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM TERMINAL</title>
-    <!-- Import Font Pixel -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <title>Aether AI - Blue Edition</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- THEME VARIABLES (Hitam, Putih, Hijau) --- */
         :root {
-            --bg-color: #000000;
-            --screen-bg: #000000;
-            
-            /* Border tetap Putih sesuai permintaan "Hitam Putih" */
-            --border-color: #ffffff; 
-            
-            /* Font Hijau sesuai permintaan */
-            --text-color: #00ff33; 
-            --text-dim: #008f11;
-            
-            /* Warna Bubble (Wireframe Style) */
-            --bubble-user-border: #ffffff;
-            --bubble-ai-border: #00ff33;
+            --primary: #2563eb;
+            --primary-light: #60a5fa;
+            --bg-body: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --sidebar-width: 280px;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --error: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-            outline: none;
-        }
+        * { box-sizing: border-box; outline: none; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'VT323', monospace;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            
-            /* Grid Background Halus */
+            background-color: var(--bg-body);
             background-image: 
-                linear-gradient(rgba(0, 255, 51, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 51, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(29, 78, 216, 0.1) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
         }
 
-        /* --- CRT EFFECT (Garis Layar TV) --- */
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                to bottom,
-                rgba(255,255,255,0),
-                rgba(255,255,255,0) 50%,
-                rgba(0,0,0,0.2) 50%,
-                rgba(0,0,0,0.2)
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 100;
-            opacity: 0.6;
-        }
-
-        /* Efek Glow pada teks agar seperti neon */
-        body {
-            text-shadow: 0 0 2px var(--text-dim);
-        }
-
-        /* --- CONTAINER UTAMA --- */
-        #app-container {
-            width: 100%;
-            max-width: 800px;
-            height: 90vh;
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
             display: flex;
             flex-direction: column;
-            background-color: var(--screen-bg);
-            /* Border Putih Tebal */
-            border: 4px solid var(--border-color);
-            position: relative;
-            box-shadow: 0 0 20px rgba(0, 255, 51, 0.1);
+            padding: 24px;
+            z-index: 50;
         }
 
-        /* --- HEADER --- */
+        .brand {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 32px;
+        }
+
+        .new-chat-btn {
+            background: var(--primary);
+            color: white; border: none; padding: 12px; border-radius: 12px;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); margin-bottom: 24px;
+        }
+        .new-chat-btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+
+        .session-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+        .session-item {
+            padding: 12px 16px; border-radius: 10px; color: var(--text-dim);
+            cursor: pointer; font-size: 0.9rem; display: flex;
+            justify-content: space-between; align-items: center; transition: 0.2s;
+        }
+        .session-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+        .session-item.active {
+            background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3);
+            color: var(--primary-light);
+        }
+
+        .delete-btn {
+            opacity: 0; background: transparent; border: none; color: var(--error);
+            cursor: pointer; padding: 4px; transition: 0.2s;
+        }
+        .session-item:hover .delete-btn { opacity: 1; }
+
+        /* --- MAIN AREA --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; }
+
         header {
-            padding: 15px 20px;
-            border-bottom: 4px solid var(--border-color);
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 20px 40px; border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
         }
 
-        header h1 {
-            margin: 0;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1rem;
-            color: var(--border-color); /* Judul Putih */
-            letter-spacing: 2px;
+        .status-pill {
+            display: flex; align-items: center; gap: 8px; font-size: 0.75rem;
+            font-weight: 600; background: rgba(34, 197, 94, 0.1); color: #4ade80;
+            padding: 6px 12px; border-radius: 100px;
         }
+        .status-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
 
-        .status-badge {
-            font-family: 'VT323', monospace;
-            font-size: 1.5rem;
-            color: var(--text-color);
-            border: 2px solid var(--text-color);
-            padding: 2px 10px;
-            text-transform: uppercase;
-            animation: pulse-green 2s infinite;
-        }
+        #chat-container { flex: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; gap: 24px; }
 
-        @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 5px var(--text-dim); opacity: 1; }
-            50% { box-shadow: 0 0 15px var(--text-color); opacity: 0.8; }
-        }
-
-        /* --- CHAT AREA --- */
-        #chat-history {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            font-size: 1.5rem;
-        }
-
-        #chat-history::-webkit-scrollbar { width: 10px; background: #000; border-left: 1px solid #333; }
-        #chat-history::-webkit-scrollbar-thumb { background: var(--text-color); }
+        .msg-wrapper { display: flex; width: 100%; animation: fadeIn 0.3s ease; }
+        .msg-wrapper.user { justify-content: flex-end; }
 
         .message {
-            max-width: 90%;
-            padding: 10px 15px;
-            line-height: 1.3;
-            position: relative;
-            word-wrap: break-word;
-            border: 2px solid; /* Wireframe style */
+            max-width: 70%; padding: 16px 20px; border-radius: 18px;
+            line-height: 1.6; font-size: 0.95rem; position: relative;
+        }
+        .user .message { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .ai .message { 
+            background: var(--bg-card); border: 1px solid var(--glass-border); 
+            color: var(--text-main); border-bottom-left-radius: 4px; 
         }
 
-        /* User: Border Putih, Teks Putih */
-        .user-message {
-            align-self: flex-end;
-            border-color: var(--bubble-user-border);
-            color: #ffffff;
-            background-color: #000;
-        }
-        
-        .user-message::before {
-            content: '>_ USER';
-            position: absolute;
-            top: -12px;
-            right: 10px;
-            background: #000;
-            font-size: 0.8rem;
-            padding: 0 5px;
-            color: #fff;
+        .error-message {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #fca5a5 !important;
+            font-family: monospace; font-size: 0.8rem !important;
         }
 
-        /* AI: Border Hijau, Teks Hijau */
-        .ai-message {
-            align-self: flex-start;
-            border-color: var(--bubble-ai-border);
-            color: var(--text-color);
-            background-color: #000;
-            box-shadow: 4px 4px 0px rgba(0, 255, 51, 0.2);
+        /* Input Section */
+        .input-area { padding: 24px 40px; }
+        .input-box {
+            max-width: 900px; margin: 0 auto; background: var(--bg-card);
+            border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 8px 16px; display: flex; align-items: center; gap: 12px;
+            transition: 0.3s;
         }
-
-        .ai-message::before {
-            content: ':: SYSTEM ::';
-            position: absolute;
-            top: -12px;
-            left: 10px;
-            background: #000;
-            font-size: 0.8rem;
-            padding: 0 5px;
-            color: var(--text-color);
-        }
-
-        /* Typing Indicator */
-        .typing-container {
-            align-self: flex-start;
-            margin-left: 10px;
-            display: none;
-            color: var(--text-color);
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.7rem;
-            animation: blink-text 1s infinite;
-        }
-
-        @keyframes blink-text {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* --- INPUT AREA --- */
-        #input-area {
-            padding: 20px;
-            background-color: #000;
-            border-top: 4px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .input-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
 
         #user-input {
-            flex: 1;
-            background-color: #000;
-            border: 2px solid var(--text-dim);
-            color: var(--text-color);
-            padding: 15px;
-            font-family: 'VT323', monospace;
-            font-size: 1.6rem;
+            flex: 1; background: transparent; border: none; color: white;
+            padding: 12px 0; font-size: 1rem;
         }
-        
-        #user-input::placeholder { color: #333; }
-        #user-input:focus { border-color: var(--text-color); box-shadow: 0 0 10px var(--text-dim); }
 
-        /* Tombol Kirim: Hitam Putih */
         #send-btn {
-            background-color: #000;
-            border: 2px solid #fff;
-            color: #fff;
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
+            background: var(--primary); color: white; border: none;
+            width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
         }
+        #send-btn:hover { background: #1d4ed8; transform: scale(1.05); }
+        #send-btn:disabled { background: var(--text-dim); cursor: not-allowed; opacity: 0.5; }
 
-        #send-btn:hover {
-            background-color: #fff;
-            color: #000;
-        }
-        
-        #send-btn svg { width: 30px; height: 30px; fill: currentColor; }
+        .typing { padding: 0 40px 10px; font-size: 0.85rem; color: var(--primary-light); display: none; }
 
-        /* Dekorasi Sudut */
-        .corner-deco {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 4px solid var(--text-color);
-            z-index: 10;
-        }
-        .tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-        .tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
-        .bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
-        .br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Efek Garis Monitor -->
-    <div class="scanlines"></div>
+    <aside class="sidebar">
+        <div class="brand">AETHER AI</div>
+        <button class="new-chat-btn" onclick="createNewSession()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            New Session
+        </button>
+        <div class="session-list" id="session-list"></div>
+    </aside>
 
-    <div id="app-container">
-        <!-- Dekorasi Sudut -->
-        <div class="corner-deco tl"></div>
-        <div class="corner-deco tr"></div>
-        <div class="corner-deco bl"></div>
-        <div class="corner-deco br"></div>
-
+    <main class="main-content">
         <header>
-            <h1>TERMINAL_V.2</h1>
-            <div class="status-badge">ONLINE</div>
+            <div>
+                <h2 id="current-title" style="font-size: 1.1rem; font-weight: 600;">System Ready</h2>
+                <p id="session-id-display" style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;"></p>
+            </div>
+            <div class="status-pill"><div class="status-dot"></div>ONLINE</div>
         </header>
 
-        <div id="chat-history">
-            <div class="message ai-message">
-                SYSTEM INITIALIZED.<br>COMMAND LINE READY.<br>WAITING FOR INPUT...
+        <div id="chat-container"></div>
+        <div id="typing" class="typing">Aether is processing...</div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="user-input" placeholder="Tanya sesuatu..." autocomplete="off">
+                <button id="send-btn" onclick="sendMessage()">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
             </div>
         </div>
-        
-        <div id="typing" class="typing-container">
-            PROCESSING_DATA...
-        </div>
-
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="ENTER COMMAND..." autocomplete="off">
-            <button id="send-btn" onclick="sendMessage()">
-                <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" /></svg>
-            </button>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // --- LOGIC AREA ---
-        let sessionId = localStorage.getItem('bw_session_id');
-        if (!sessionId) {
-            sessionId = 'user-' + Math.random().toString(36).substring(7);
-            localStorage.setItem('bw_session_id', sessionId);
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sessionListEl = document.getElementById('session-list');
+        const currentTitleEl = document.getElementById('current-title');
+        const sessIdDisplay = document.getElementById('session-id-display');
+        const typingIndicator = document.getElementById('typing');
+        const sendBtn = document.getElementById('send-btn');
+
+        let currentSessionId = localStorage.getItem('aether_session_id');
+
+        window.onload = () => initApp();
+
+        function initApp() {
+            const sessions = getSessions();
+            if (sessions.length === 0) {
+                createNewSession();
+            } else {
+                if (!currentSessionId || !sessions.find(s => s.id === currentSessionId)) {
+                    currentSessionId = sessions[0].id;
+                }
+                switchSession(currentSessionId);
+            }
         }
 
-        const inputField = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatHistory = document.getElementById('chat-history');
-        const typingIndicator = document.getElementById('typing');
+        function getSessions() {
+            return JSON.parse(localStorage.getItem('aether_sessions')) || [];
+        }
 
-        inputField.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendMessage();
-        });
+        function createNewSession() {
+            const id = 'save-' + Math.random().toString(36).substring(2, 9);
+            const sessions = getSessions();
+            sessions.unshift({ id, title: 'New Conversation' });
+            localStorage.setItem('aether_sessions', JSON.stringify(sessions));
+            switchSession(id);
+        }
+
+        function switchSession(id) {
+            currentSessionId = id;
+            localStorage.setItem('aether_session_id', id);
+            sessIdDisplay.innerText = `ID: ${id}`;
+            renderSidebar();
+            loadChat(id);
+        }
+
+        function renderSidebar() {
+            const sessions = getSessions();
+            sessionListEl.innerHTML = '';
+            sessions.forEach(s => {
+                const div = document.createElement('div');
+                div.className = `session-item ${s.id === currentSessionId ? 'active' : ''}`;
+                div.onclick = () => switchSession(s.id);
+                div.innerHTML = `
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.title}</span>
+                    <button class="delete-btn" onclick="deleteSession(event, '${s.id}')">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                `;
+                sessionListEl.appendChild(div);
+            });
+        }
+
+        function deleteSession(e, id) {
+            e.stopPropagation();
+            let sessions = getSessions().filter(s => s.id !== id);
+            localStorage.setItem('aether_sessions', JSON.stringify(sessions));
+            localStorage.removeItem(`history_${id}`);
+            initApp();
+        }
+
+        function loadChat(id) {
+            chatContainer.innerHTML = '';
+            const history = JSON.parse(localStorage.getItem(`history_${id}`)) || [];
+            const session = getSessions().find(s => s.id === id);
+            currentTitleEl.innerText = session ? session.title : "System Ready";
+            
+            if (history.length === 0) {
+                appendMsg('ai', 'Sistem Online. Silahkan masukkan perintah atau pertanyaan Anda.');
+            } else {
+                history.forEach(m => appendMsg(m.role, m.text, m.isError));
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function appendMsg(role, text, isError = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${role}`;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isError ? 'error-message' : ''}`;
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            wrapper.appendChild(msgDiv);
+            chatContainer.appendChild(wrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
         async function sendMessage() {
-            const text = inputField.value.trim();
+            const text = userInput.value.trim();
             if (!text) return;
 
-            // Tampilkan Pesan User (Putih)
-            appendMessage(text, 'user-message');
-            inputField.value = '';
-            
-            // UI State
-            setInputState(false);
-            showTyping(true);
+            appendMsg('user', text);
+            userInput.value = '';
+            saveMsg(currentSessionId, 'user', text);
+
+            // Update Judul Sesi jika ini pesan pertama
+            const history = JSON.parse(localStorage.getItem(`history_${currentSessionId}`)) || [];
+            if (history.length === 1) updateTitle(currentSessionId, text);
+
+            setLoading(true);
 
             try {
-                // Kirim ke Server
-                const response = await fetch('/api/chat', {
+                // Catatan: Endpoint ini harus mengarah ke backend Node.js Anda yang memanggil n8n
+                const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: text, sessionId: sessionId })
+                    body: JSON.stringify({ 
+                        question: text, 
+                        sessionId: currentSessionId 
+                    })
                 });
 
-                const data = await response.json();
-                showTyping(false);
+                const data = await res.json();
+                setLoading(false);
 
-                // Tampilkan Balasan AI (Hijau - Typewriter)
-                if (data.answer) {
-                    typeWriterMessage(data.answer, 'ai-message');
+                if (res.ok && data.answer) {
+                    appendMsg('ai', data.answer);
+                    saveMsg(currentSessionId, 'ai', data.answer);
                 } else {
-                    appendMessage("SYS_ERR: " + (data.error || "UNKNOWN"), 'ai-message');
+                    const errMsg = `ERROR ${res.status}: ${data.message || 'Webhook n8n tidak merespon.'}\n\nHint: Pastikan workflow n8n sudah ACTIVE dan URL yang digunakan adalah URL Production.`;
+                    appendMsg('ai', errMsg, true);
                 }
-
             } catch (err) {
-                showTyping(false);
-                appendMessage("CONNECTION_FAILED.", 'ai-message');
-            }
-
-            setInputState(true);
-            inputField.focus();
-        }
-
-        function setInputState(enabled) {
-            inputField.disabled = !enabled;
-            sendBtn.disabled = !enabled;
-            if (enabled) {
-                inputField.style.opacity = "1";
-                sendBtn.style.opacity = "1";
-            } else {
-                inputField.style.opacity = "0.5";
-                sendBtn.style.opacity = "0.5";
+                setLoading(false);
+                appendMsg('ai', 'FATAL ERROR: Gagal terhubung ke server backend. Periksa konsol untuk detail.', true);
+                console.error(err);
             }
         }
 
-        function showTyping(show) {
-            typingIndicator.style.display = show ? 'block' : 'none';
-            scrollToBottom();
+        function setLoading(isLoading) {
+            typingIndicator.style.display = isLoading ? 'block' : 'none';
+            userInput.disabled = isLoading;
+            sendBtn.disabled = isLoading;
+            if (!isLoading) userInput.focus();
         }
 
-        function appendMessage(text, className) {
-            const div = document.createElement('div');
-            div.classList.add('message', className);
-            div.innerHTML = formatText(text);
-            chatHistory.appendChild(div);
-            scrollToBottom();
-            return div;
+        function saveMsg(id, role, text, isError = false) {
+            const history = JSON.parse(localStorage.getItem(`history_${id}`)) || [];
+            history.push({ role, text, isError });
+            localStorage.setItem(`history_${id}`, JSON.stringify(history));
         }
 
-        // Efek mengetik
-        function typeWriterMessage(text, className) {
-            const div = document.createElement('div');
-            div.classList.add('message', className);
-            chatHistory.appendChild(div);
-            
-            let i = 0;
-            const speed = 20; 
-            const formattedText = formatText(text);
-
-            if (formattedText.includes('<') && !formattedText.includes('<br>')) {
-                div.innerHTML = formattedText;
-                scrollToBottom();
-                return;
+        function updateTitle(id, text) {
+            const sessions = getSessions();
+            const s = sessions.find(x => x.id === id);
+            if (s) {
+                s.title = text.substring(0, 25).toUpperCase() + (text.length > 25 ? '...' : '');
+                localStorage.setItem('aether_sessions', JSON.stringify(sessions));
+                renderSidebar();
+                currentTitleEl.innerText = s.title;
             }
-
-            div.innerHTML = ""; 
-            
-            function type() {
-                if (i < text.length) {
-                    if (text.charAt(i) === '\n') {
-                        div.innerHTML += '<br>';
-                    } else {
-                        div.innerHTML += text.charAt(i);
-                    }
-                    i++;
-                    scrollToBottom();
-                    setTimeout(type, speed);
-                }
-            }
-            type();
         }
 
-        function formatText(text) {
-            let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            return safeText.replace(/\n/g, '<br>');
-        }
-
-        function scrollToBottom() {
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
 </html>

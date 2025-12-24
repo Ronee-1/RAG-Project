@@ -9,7 +9,7 @@ const PORT = 3000;
 // === KONFIGURASI ===
 // Ganti URL ini dengan URL Production Webhook n8n Anda yang aktif
 // Pastikan n8n sudah di-deploy/active agar tidak error 404
-const N8N_WEBHOOK_URL = 'https://berniece-gangliar-sally.ngrok-free.dev/webhook/chat-api';
+const N8N_WEBHOOK_URL = 'https://berniece-gangliar-sally.ngrok-free.dev/webhook/bc3934df-8d10-48df-9960-f0db1e806328';
 
 // Middleware untuk membaca data JSON dari request frontend
 app.use(express.json());
