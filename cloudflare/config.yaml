@@ -1,9 +1,0 @@
-tunnel: 3b806e23-d58c-40d9-b65b-33070d4a0aa5
-credentials-file: C:\Users\LENOVO\.cloudflared\3b806e23-d58c-40d9-b65b-33070d4a0aa5.json
-
-ingress:
-  - hostname: webhook.iather.site
-    service: http://localhost:5678
-  - hostname: n8n.iather.site
-    service: http://localhost:5678
-  - service: http_status:404
